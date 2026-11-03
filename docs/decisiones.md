@@ -104,6 +104,7 @@ Registro breve de las decisiones del proyecto: qué se decidió, por qué y qué
   - `golangci-lint` (latest) → **0 issues**. La v2.5.0 no sirve: está compilada con Go 1.25 y el proyecto usa 1.27.
   - `govulncheck` → primero encontró **5 vulnerabilidades** en dependencias **indirectas** (traídas por Gin): `golang.org/x/net` v0.51.0 (4, HTTP/2) y `quic-go` v0.59.0 (1, HTTP/3). Se actualizaron a v0.60.0 y v0.59.1; las pruebas siguieron pasando y el nuevo escaneo dio **0 vulnerabilidades**.
   - `Trivy` sobre `orders-api:dev` → **0 HIGH/CRITICAL** (sistema base Debian 12 y binario Go).
+- **Primer CI en GitHub (2026-11-03):** calidad y pruebas pasaron; govulncheck falló porque el CI instaló Go **1.27.0** (de `go 1.27.0` en go.mod), que tiene vulnerabilidades en la librería estándar corregidas en **1.27.3** (localmente se escaneó en el contenedor `golang:1.27`, que ya era 1.27.3). Se fijó `toolchain go1.27.3` en go.mod: CI y máquinas locales usan la misma versión exacta. También se corrigió la versión de la acción de Trivy (`v0.36.0`).
 
 ## D19 — Terraform con el provider de Docker (J6)
 - **Por qué Docker y no AWS:** practicar el ciclo completo (plan, apply, state, destroy) sin una cuenta en la nube ni costos. Los conceptos son los mismos.
