@@ -1,0 +1,6 @@
+# Namespace: una "carpeta" dentro del clúster para agrupar los recursos del
+# proyecto y separarlos de los de otros equipos.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orders

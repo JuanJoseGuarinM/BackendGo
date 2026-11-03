@@ -1,0 +1,66 @@
+# Catálogo ficticio como segundo servicio (opcional del PDF).
+# El catálogo NO guarda estado (sus productos son fijos), por eso SÍ puede
+# tener 2 réplicas sin problema: cualquier pod responde lo mismo.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog
+  namespace: orders
+  labels:
+    app: catalog
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: catalog
+  template:
+    metadata:
+      labels:
+        app: catalog
+    spec:
+      containers:
+        - name: catalog
+          image: catalog:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+          resources:
+            requests:
+              cpu: 25m
+              memory: 16Mi
+            limits:
+              cpu: 250m
+              memory: 64Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog # la API lo encuentra como http://catalog (ver configmap.yaml)
+  namespace: orders
+spec:
+  selector:
+    app: catalog
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

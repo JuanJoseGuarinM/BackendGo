@@ -1,0 +1,7 @@
+# Kustomize: permite aplicar todos los manifiestos juntos con
+#   kubectl apply -k deploy/k8s
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - catalog.yaml
+  - api.yaml

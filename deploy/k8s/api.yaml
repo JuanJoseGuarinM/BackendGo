@@ -1,0 +1,101 @@
+# ---------------------------------------------------------------------------
+# Deployment: "quiero N copias (pods) de este contenedor corriendo siempre".
+# Si un pod muere, Kubernetes crea otro. Si cambias la imagen, hace un
+# rolling update (reemplaza los pods de a poco, sin cortar el servicio).
+# ---------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  namespace: orders
+  labels:
+    app: orders-api
+spec:
+  # ⚠️ 1 réplica A PROPÓSITO: los pedidos se guardan en MEMORIA dentro del
+  # pod. Con 2 réplicas, un pedido creado en el pod A no existiría en el pod B.
+  # Para escalar horizontalmente primero hay que mover los datos a una base de
+  # datos compartida (PostgreSQL). Ver D6 y D14 en docs/decisiones.md.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orders-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # durante la actualización puede haber 1 pod de más
+      maxUnavailable: 0  # nunca bajar de las réplicas deseadas: cero caída
+  template:
+    metadata:
+      labels:
+        app: orders-api
+    spec:
+      # Tiempo que Kubernetes espera después de enviar SIGTERM antes de matar
+      # el pod. Debe ser mayor que SHUTDOWN_DELAY + el tiempo de Shutdown (5s + 10s).
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: api
+          image: orders-api:dev
+          imagePullPolicy: IfNotPresent # usa la imagen cargada en kind, no la busca en internet
+          ports:
+            - name: http
+              containerPort: 8080
+          # Toda la configuración viene del ConfigMap como variables de entorno.
+          envFrom:
+            - configMapRef:
+                name: orders-api-config
+
+          # requests: lo que el pod tiene GARANTIZADO (Kubernetes lo usa para
+          #           decidir en qué nodo cabe).
+          # limits:   el MÁXIMO. Si pasa el límite de memoria, lo matan (OOMKilled);
+          #           si pasa el de CPU, lo frenan.
+          resources:
+            requests:
+              cpu: 50m       # 50 milicores = 5% de un núcleo
+              memory: 32Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+
+          # LIVENESS: "¿estás vivo?". Si falla 3 veces seguidas → reinicia el pod.
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          # READINESS: "¿puedes atender?". Si falla → deja de enviarle tráfico
+          # (sin reiniciarlo). Durante el apagado /readyz responde 503 a propósito.
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 1
+
+          # Seguridad: sin root, sin escalar privilegios, sistema de archivos de
+          # solo lectura (la API no escribe en disco).
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+---
+# ---------------------------------------------------------------------------
+# Service: una dirección FIJA para llegar a los pods. Los pods cambian de IP
+# cada vez que se recrean; el Service no. Además reparte el tráfico entre los
+# pods que están "ready".
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api
+  namespace: orders
+spec:
+  type: ClusterIP # solo accesible dentro del clúster (afuera: port-forward o Ingress)
+  selector:
+    app: orders-api # envía tráfico a los pods con esta etiqueta
+  ports:
+    - name: http
+      port: 80          # puerto del Service
+      targetPort: http  # puerto del contenedor (8080)

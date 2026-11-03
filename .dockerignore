@@ -1,0 +1,15 @@
+# Lo que NO se envía a Docker al construir la imagen.
+# Menos archivos = build más rápido, y nada sensible termina dentro de la imagen.
+.git
+.gitignore
+.dockerignore
+Dockerfile
+*.pdf
+*.md
+docs/
+deploy/
+bin/
+*.exe
+coverage.out
+scripts/
+.github/

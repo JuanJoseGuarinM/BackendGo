@@ -1,0 +1,7 @@
+# Ejemplo de valores por entorno. Copiar a terraform.tfvars (ignorado en Git)
+# y ajustar. Los .tfvars reales no se suben porque suelen tener datos
+# sensibles; los secretos de verdad deberían venir de un gestor de secretos.
+api_port = 8097
+
+# Si ejecutas terraform nativo en Windows (no dentro de Docker):
+# docker_host = "npipe:////./pipe/docker_engine"

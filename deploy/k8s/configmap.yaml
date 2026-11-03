@@ -1,0 +1,16 @@
+# ConfigMap: configuración NO sensible, separada de la imagen.
+# La misma imagen sirve para desarrollo, pruebas y producción; solo cambia
+# este archivo. Datos sensibles (contraseñas, tokens) NO van aquí: van en un
+# Secret o, mejor, en un gestor de secretos (ver docs/conceptosJ5.md).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-api-config
+  namespace: orders
+data:
+  PORT: "8080"
+  # "catalog" es el nombre del Service del catálogo: Kubernetes lo resuelve
+  # por DNS a los pods del catálogo.
+  CATALOG_URL: "http://catalog"
+  # Tiempo de drenado al apagarse (ver /readyz en health.go).
+  SHUTDOWN_DELAY: "5s"
