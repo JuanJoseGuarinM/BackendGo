@@ -1,0 +1,18 @@
+# Configuración de golangci-lint (formato v2).
+# "standard" ya incluye: errcheck, govet, ineffassign, staticcheck, unused.
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - gosec      # SAST: busca problemas de seguridad en el código
+    - bodyclose  # que siempre se cierre el body de las respuestas HTTP
+    - errorlint  # buen uso de errors.Is / errors.As
+  settings:
+    errorlint:
+      # Usamos %v a propósito en algunos fmt.Errorf para NO exponer errores
+      # internos (ver D10 en docs/decisiones.md).
+      errorf: false
+  exclusions:
+    presets:
+      - std-error-handling # no exigir revisar el error de Close(), Write() en respuestas, etc.
