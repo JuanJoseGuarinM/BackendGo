@@ -1,0 +1,6 @@
+# Saltos de línea siempre LF (estilo Linux), también en Windows.
+# Evita que gofmt marque archivos por CRLF y que los scripts .sh se rompan.
+* text=auto eol=lf
+
+# Windows PowerShell funciona mejor con CRLF
+*.ps1 text eol=crlf
