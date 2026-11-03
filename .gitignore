@@ -1,0 +1,22 @@
+# Binarios compilados
+*.exe
+/bin/
+
+# Documento confidencial del plan (no subirlo a un repo público)
+*.pdf
+
+# Reporte de cobertura de las pruebas
+coverage.out
+
+# Terraform: estado y plugins locales (el estado puede tener datos sensibles)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Variables de entorno locales
+.env
+
+# Plan del curso: copia de un documento confidencial, solo local
+docs/plan.md
